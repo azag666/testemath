@@ -558,13 +558,10 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> VERIFICANDO...';
             
-            // Correção de Segurança: Bloqueia o avanço se não houver PIX gerado
             if (!currentTransactionId) {
-                btn.innerHTML = 'ERRO: PIX NÃO GERADO';
-                setTimeout(() => {
-                    btn.innerHTML = originalContent;
-                    btn.disabled = false;
-                }, 2000);
+                alert("ERRO NO SITE: O ID do Pix não foi salvo. Verifique a geração.");
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
                 return;
             }
             
@@ -574,8 +571,11 @@
             
             const data = await res.json();
             
-            // Checagem flexível de status (não importa se vier maiúsculo ou minúsculo)
-            if (data && data.status && data.status.toLowerCase() === 'paid') {
+            // DEDO-DURO: Vai mostrar na sua cara o que a API respondeu
+            alert("A API RESPONDEU ISSO:\n" + JSON.stringify(data, null, 2));
+            
+            // Verifica se está pago (aceitando paid ou approved)
+            if (data && data.status && (data.status.toLowerCase() === 'paid' || data.status.toLowerCase() === 'approved')) {
                 clearInterval(pixPollingInterval);
                 showSuccess();
             } else {
@@ -586,7 +586,7 @@
                 }, 2000);
             }
         } catch (e) {
-            console.error("Erro de conexão na checagem manual:", e);
+            alert("ERRO DE COMUNICAÇÃO COM A API: " + e.message);
             btn.innerHTML = 'ERRO DE CONEXÃO';
             setTimeout(() => {
                 btn.innerHTML = originalContent;
