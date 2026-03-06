@@ -177,7 +177,7 @@
                         </div>
                     </div>
                     <div class="text-right">
-                        <span class="block text-xl font-black text-white">R$ 1,90</span>
+                        <span class="block text-xl font-black text-white">R$ 14,90</span>
                     </div>
                 </div>
             </label>
@@ -235,7 +235,6 @@
         <div class="swiper modelsSwiper">
             <div class="swiper-wrapper">
                 <div class="swiper-slide"><img src="https://pub-165b12f7792f481faed1f61d81578b79.r2.dev/matchflix/1match.png" class="w-full h-full object-cover"></div>
-                <!-- LINK CORRIGIDO ABAIXO -->
                 <div class="swiper-slide"><img src="https://pub-165b12f7792f481faed1f61d81578b79.r2.dev/matchflix/2match.png" class="w-full h-full object-cover"></div>
                 <div class="swiper-slide"><img src="https://pub-165b12f7792f481faed1f61d81578b79.r2.dev/matchflix/3match.png" class="w-full h-full object-cover"></div>
                 <div class="swiper-slide"><img src="https://pub-165b12f7792f481faed1f61d81578b79.r2.dev/matchflix/4match.png" class="w-full h-full object-cover"></div>
@@ -248,7 +247,6 @@
     <div class="p-4 mt-2">
         <h2 class="text-xl font-black mb-4 uppercase text-center text-white italic tracking-tighter">Prévia <span class="text-red-600">Sem Censura</span></h2>
         <div class="w-full bg-black rounded-2xl overflow-hidden border border-gray-800 shadow-xl relative">
-            <!-- VÍDEO COM AUTOPLAY E MUTED -->
             <video id="previewVideo" class="w-full aspect-[4/5] object-cover" autoplay muted loop playsinline webkit-playsinline controlsList="nodownload">
                 <source src="https://pub-165b12f7792f481faed1f61d81578b79.r2.dev/matchflix/Design%20sem%20nome%20(4).mp4" type="video/mp4">
             </video>
@@ -431,7 +429,7 @@
         <div class="bg-black/60 border-2 border-dashed border-red-600/50 rounded-3xl p-5 mb-6 relative">
             <p class="text-[9px] text-gray-400 uppercase font-black tracking-widest mb-1">Oferta Exclusiva (3 Dias)</p>
             <div class="flex items-center justify-center gap-3">
-                <p class="text-gray-500 line-through font-bold text-base leading-none">1,90</p>
+                <p class="text-gray-500 line-through font-bold text-base leading-none">14,90</p>
                 <p class="text-4xl font-black text-green-500 italic tracking-tighter leading-none">R$ 9,90</p>
             </div>
         </div>
@@ -450,7 +448,7 @@
     const PRESSEL_ID = 200;
     
     const PRICES = {
-        '3dias': 1.90,
+        '3dias': 14.90,
         'mensal': 19.90,
         'vitalicio': 47.90,
         'discount': 9.90
@@ -468,6 +466,34 @@
     let currentTransactionId = null;
     let globalClickId = null;
     let offerShown = false;
+
+    // --- VARIÁVEIS PARA CAPTURAR UTMS ---
+    let utms = {
+        source: '',
+        medium: '',
+        campaign: '',
+        content: '',
+        term: ''
+    };
+
+    // --- FUNÇÃO PARA CAPTURAR UTMS DA URL ---
+    function captureUTMs() {
+        const urlParams = new URLSearchParams(window.location.search);
+        utms.source = urlParams.get('utm_source') || '';
+        utms.medium = urlParams.get('utm_medium') || '';
+        utms.campaign = urlParams.get('utm_campaign') || '';
+        utms.content = urlParams.get('utm_content') || '';
+        utms.term = urlParams.get('utm_term') || '';
+        
+        // Opcional: Salvar no sessionStorage para persistência na sessão
+        sessionStorage.setItem('matchflix_utms', JSON.stringify(utms));
+    }
+
+    // --- RECUPERAR UTMS SALVOS ---
+    function getStoredUTMs() {
+        const stored = sessionStorage.getItem('matchflix_utms');
+        return stored ? JSON.parse(stored) : utms;
+    }
 
     // --- GARANTIR AUTOPLAY ---
     function forceAutoplay() {
@@ -557,8 +583,10 @@
         processCheckout();
     }
 
+    // --- INTEGRANDO UTMS NO REGISTRO DE CLIQUE ---
     async function registerClickAPI() {
         try {
+            const currentUTMs = getStoredUTMs();
             const params = new URLSearchParams(window.location.search);
             const response = await fetch(`${API_BASE_URL}/api/registerClick`, {
                 method: "POST",
@@ -567,7 +595,13 @@
                     sellerApiKey: HOTTRACK_API_KEY,
                     presselId: PRESSEL_ID,
                     fbclid: params.get("fbclid"),
-                    user_agent: navigator.userAgent
+                    user_agent: navigator.userAgent,
+                    // Passando UTMs capturadas
+                    utm_source: currentUTMs.source,
+                    utm_medium: currentUTMs.medium,
+                    utm_campaign: currentUTMs.campaign,
+                    utm_content: currentUTMs.content,
+                    utm_term: currentUTMs.term
                 })
             });
             if (response.ok) {
@@ -595,11 +629,22 @@
             const priceBRL = PRICES[currentPkg];
             const valueCents = Math.round(priceBRL * 100);
             const clickId = globalClickId || "match_" + Date.now();
+            const currentUTMs = getStoredUTMs();
 
             const response = await fetch(`${API_BASE_URL}/api/pix/generate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'x-api-key': HOTTRACK_API_KEY },
-                body: JSON.stringify({ click_id: clickId, value_cents: valueCents })
+                body: JSON.stringify({ 
+                    click_id: clickId, 
+                    value_cents: valueCents,
+                    // Enviando UTMs também na geração da transação para rastreio direto
+                    metadata: {
+                        utm_source: currentUTMs.source,
+                        utm_medium: currentUTMs.medium,
+                        utm_campaign: currentUTMs.campaign,
+                        utm_content: currentUTMs.content
+                    }
+                })
             });
 
             const data = await response.json();
@@ -722,6 +767,7 @@
     }
 
     window.onload = () => {
+        captureUTMs(); // Captura UTMs assim que carrega
         registerClickAPI();
         forceAutoplay();
         new Swiper('.modelsSwiper', {
