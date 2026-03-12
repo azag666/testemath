@@ -103,25 +103,6 @@
 
         details > summary { list-style: none; }
         details > summary::-webkit-details-marker { display: none; }
-
-        /* Estilo do Botão Unmute */
-        .unmute-btn {
-            position: absolute;
-            bottom: 12px;
-            right: 12px;
-            background: rgba(0,0,0,0.7);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 10px;
-            font-weight: bold;
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            z-index: 10;
-            backdrop-filter: blur(4px);
-        }
     </style>
 
     <script>
@@ -156,13 +137,6 @@
             <video id="heroVideo" class="w-full aspect-video object-cover" autoplay muted loop playsinline webkit-playsinline controlsList="nodownload">
                 <source src="https://pub-165b12f7792f481faed1f61d81578b79.r2.dev/matchflix/download.mp4" type="video/mp4">
             </video>
-            <div class="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase flex items-center gap-1 pointer-events-none shadow-lg">
-                <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-                Ao Vivo Agora
-            </div>
-            <button onclick="toggleAudio('heroVideo', this)" class="unmute-btn">
-                <i class="fa-solid fa-volume-xmark"></i> CLIQUE PARA OUVIR
-            </button>
         </div>
     </div>
 
@@ -213,13 +187,13 @@
                     <div class="flex items-center gap-3">
                         <div class="custom-radio"></div>
                         <div>
-                            <h3 class="font-bold text-lg">Vitalicio + Bônus + Inc3st0s☠️</h3>
+                            <h3 class="font-bold text-lg">Vitalicio + Inc3st0s☠️</h3>
                             <p class="text-xs text-gray-400 font-medium">+ 250 Videos Vazados Amadores</p>
                         </div>
                     </div>
                     <div class="text-right">
                         <span class="block text-xs text-gray-500 line-through font-bold">R$ 97,00</span>
-                        <span class="block text-xl font-black text-white">R$ 47,90</span>
+                        <span class="block text-xl font-black text-white">R$ 27,90</span>
                     </div>
                 </div>
             </label>
@@ -256,9 +230,6 @@
             <video id="previewVideo" class="w-full aspect-[4/5] object-cover" autoplay muted loop playsinline webkit-playsinline controlsList="nodownload">
                 <source src="https://pub-165b12f7792f481faed1f61d81578b79.r2.dev/matchflix/Design%20sem%20nome%20(4).mp4" type="video/mp4">
             </video>
-            <button onclick="toggleAudio('previewVideo', this)" class="unmute-btn">
-                <i class="fa-solid fa-volume-xmark"></i> CLIQUE PARA OUVIR
-            </button>
         </div>
     </div>
 
@@ -436,7 +407,7 @@
     const PRICES = {
         '3dias': 14.90,
         'mensal': 19.90,
-        'vitalicio': 47.90,
+        'vitalicio': 27.90,
         'discount': 9.90
     };
 
@@ -475,19 +446,6 @@
             const v = document.getElementById(id);
             if(v) v.play().catch(() => {});
         });
-    }
-
-    function toggleAudio(videoId, btn) {
-        const video = document.getElementById(videoId);
-        if (video.muted) {
-            video.muted = false;
-            btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> ÁUDIO ATIVADO';
-            btn.style.background = 'rgba(255, 0, 0, 0.7)';
-        } else {
-            video.muted = true;
-            btn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i> CLIQUE PARA OUVIR';
-            btn.style.background = 'rgba(0, 0, 0, 0.7)';
-        }
     }
 
     function initBackRedirect() {
